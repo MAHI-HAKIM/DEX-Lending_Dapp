@@ -12,6 +12,9 @@ function App() {
   const [depositAmount, setDepositAmount] = useState('');
   const [borrowAmount, setBorrowAmount] = useState('');
   const [repayAmount, setRepayAmount] = useState('');
+  const [userDeposited, setUserDeposited] = useState(0);
+  const [userBorrowed, setUserBorrowed] = useState(0);
+  const [remainingRepay, setRemainingRepay] = useState(0);
 
   // Initialize Web3 and Contract
   useEffect(() => {
@@ -29,11 +32,10 @@ function App() {
           const deployedNetwork = LendingPlatform.networks[networkId];
 
           if (deployedNetwork) {
-            console.log("Deployed Network adress: ", deployedNetwork.address);
+            console.log("Deployed Network address: ", deployedNetwork.address);
             const lendingPlatformInstance = new web3Instance.eth.Contract(
               LendingPlatform.abi,
               deployedNetwork.address
-        
             );
             setContract(lendingPlatformInstance);
           } else {
@@ -69,8 +71,26 @@ function App() {
       }
     }
   };
-  
-  
+
+  // Fetch user-specific data (deposits, borrowed, remaining repay)
+  const fetchUserData = async () => {
+    if (contract && accounts.length > 0) {
+        try {
+            // Directly access balances and borrowedAmounts mappings
+            const deposited = await contract.methods.balances(accounts[0]).call();
+            setUserDeposited(web3.utils.fromWei(deposited, 'ether'));
+
+            const borrowed = await contract.methods.borrowedAmounts(accounts[0]).call();
+            setUserBorrowed(web3.utils.fromWei(borrowed, 'ether'));
+
+            const remainingRepayAmount = await contract.methods.borrowedAmounts(accounts[0]).call();
+            setRemainingRepay(web3.utils.fromWei(remainingRepayAmount, 'ether'));
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    }
+};
+
 
   // Handle deposit (lend)
   const deposit = async () => {
@@ -80,14 +100,13 @@ function App() {
     }
 
     if (contract && accounts.length > 0) {
-      console.log("Depositing into contract address:", contract.options.address);
-
       try {
         await contract.methods.deposit().send({
           from: accounts[0],
           value: web3.utils.toWei(depositAmount, 'ether'),
         });
         alert('Deposit Successful!');
+        fetchUserData(); // Fetch updated data after deposit
         fetchContractBalance();
         fetchWalletBalance();
       } catch (error) {
@@ -110,6 +129,7 @@ function App() {
           from: accounts[0],
         });
         alert('Borrowing Successful!');
+        fetchUserData(); // Fetch updated data after borrowing
         fetchContractBalance();
         fetchWalletBalance();
       } catch (error) {
@@ -132,6 +152,7 @@ function App() {
           from: accounts[0],
         });
         alert('Repayment Successful!');
+        fetchUserData(); // Fetch updated data after repayment
         fetchContractBalance();
         fetchWalletBalance();
       } catch (error) {
@@ -145,6 +166,7 @@ function App() {
   useEffect(() => {
     fetchWalletBalance();
     fetchContractBalance();
+    fetchUserData();
   }, [contract, accounts]);
 
   return (
@@ -152,8 +174,10 @@ function App() {
       <h1>Lending & Borrowing Platform</h1>
       <h3>Account: {accounts[0]}</h3>
       <h4>Wallet Balance (MetaMask): {walletBalance} ETH</h4>
-      <h4>User Deposited to Contract : {contractBalance} ETH</h4>
-      <h4>Total Deposits in Contract: {totalBalance} ETH</h4>
+      <h4>User Deposited to Contract: {userDeposited} ETH</h4>
+      <h4>User Borrowed from Contract: {userBorrowed} ETH</h4>
+      <h4>Remaining Repayment: {remainingRepay} ETH</h4>
+      <h4>Total Deposits in Contract: {contractBalance} ETH</h4>
 
       <div>
         <h3>Lend (Deposit)</h3>
@@ -188,7 +212,7 @@ function App() {
         <button onClick={repay}>Repay</button>
       </div>
 
-      <button onClick={() => { fetchWalletBalance(); fetchContractBalance(); }}>Refresh Balances</button>
+      <button onClick={() => { fetchWalletBalance(); fetchContractBalance(); fetchUserData(); }}>Refresh Balances</button>
     </div>
   );
 }
