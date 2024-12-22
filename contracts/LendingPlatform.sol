@@ -2,36 +2,61 @@
 pragma solidity ^0.8.0;
 
 contract LendingPlatform {
+
     // State Variables
-    mapping(address => uint) public balances;           // Tracks user deposits (collateral balance)
-    mapping(address => uint) public borrowedAmounts;    // Tracks borrowed amounts per user
-    uint public totalFundsAvailable;                    // Total funds available for borrowing
-    uint public constant LTV = 75;                      // Loan-to-Value ratio (e.g., 75%)
+    mapping(address => uint256) public balances;          // User collateral balances
+    mapping(address => uint256) public borrowedAmounts;   // User borrowed amounts
+    mapping(address => uint256) public loanStartTimes;    // Loan start times for interest calculation
+    mapping(address => uint256) public loanDueDates;      // Loan due dates
+
+    uint256 public totalFundsAvailable;                   // Total funds available for borrowing
+    uint256 public constant LTV = 75;                     // Loan-to-Value ratio (e.g., 75%)
+    uint256 public annualInterestRate = 5;                // 5% annual interest rate
+    uint256 public latePenaltyRate = 2;                   // 2% penalty for overdue loans
+    uint256 public platformFee = 1;                       // 1% service charge
+    uint256 public insuranceFund;                         // Insurance fund pool
+
+    // Address of the contract owner (deployer)
+    address public owner;
 
     // Events for transparency
-    event Deposit(address indexed user, uint amount);
-    event Withdraw(address indexed user, uint amount);
-    event Borrow(address indexed user, uint amount);
-    event Repay(address indexed user, uint amount);
+    event Deposit(address indexed user, uint256 amount);
+    event Withdraw(address indexed user, uint256 amount);
+    event Borrow(address indexed user, uint256 amount);
+    event Repay(address indexed user, uint256 amount);
+
+    // Constructor to set the owner
+    constructor() {
+        owner = msg.sender; // Set the deployer as the owner
+    }
+
+    // Modifier to restrict access to only the owner
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not the contract owner");
+        _;
+    }
 
     // Deposit funds into the contract (collateral)
     function deposit() public payable {
         require(msg.value > 0, "Deposit amount must be greater than 0");
-        balances[msg.sender] += msg.value;
-        totalFundsAvailable += msg.value;
-        emit Deposit(msg.sender, msg.value);
+
+        uint256 fee = msg.value * platformFee / 100;
+        uint256 netAmount = msg.value - fee;
+
+        balances[msg.sender] = balances[msg.sender] + netAmount;
+        totalFundsAvailable = totalFundsAvailable + netAmount;
+        insuranceFund = insuranceFund + (fee / 2); // 50% of fees go to the insurance fund
+
+        emit Deposit(msg.sender, netAmount);
     }
 
     // Withdraw collateral (only if user has no outstanding loans)
     function withdraw(uint256 amount) public {
-        uint depositAmount = balances[msg.sender];
-        uint debt = borrowedAmounts[msg.sender];
+        require(borrowedAmounts[msg.sender] == 0, "Outstanding loan exists, cannot withdraw collateral");
+        require(balances[msg.sender] >= amount, "Insufficient balance to withdraw");
 
-        require(debt == 0, "Outstanding loan exists, cannot withdraw collateral");
-        require(depositAmount >= amount, "Insufficient balance to withdraw");
-
-        balances[msg.sender] -= amount;
-        totalFundsAvailable -= amount;
+        balances[msg.sender] = balances[msg.sender] - amount;
+        totalFundsAvailable = totalFundsAvailable - amount;
 
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Transfer failed");
@@ -42,15 +67,17 @@ contract LendingPlatform {
     // Borrow funds from the contract
     function borrow(uint256 amount) public {
         require(amount > 0, "Amount must be greater than 0");
-        uint maxBorrowable = (balances[msg.sender] * LTV) / 100; // Calculate max borrowable based on LTV
-        uint currentDebt = borrowedAmounts[msg.sender];
+        uint256 maxBorrowable = balances[msg.sender] * LTV / 100; // Calculate max borrowable based on LTV
+        uint256 currentDebt = borrowedAmounts[msg.sender];
 
         require(currentDebt + amount <= maxBorrowable, "Exceeds borrow limit based on collateral");
         require(amount <= totalFundsAvailable, "Not enough funds available in the contract");
         require(address(this).balance >= amount, "Contract does not have enough liquidity");
 
-        borrowedAmounts[msg.sender] += amount;
-        totalFundsAvailable -= amount;
+        borrowedAmounts[msg.sender] = borrowedAmounts[msg.sender] + amount;
+        loanStartTimes[msg.sender] = block.timestamp;
+        loanDueDates[msg.sender] = block.timestamp + 30 days; // Loan repayment due in 30 days
+        totalFundsAvailable = totalFundsAvailable - amount;
 
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Transfer failed");
@@ -58,17 +85,32 @@ contract LendingPlatform {
         emit Borrow(msg.sender, amount);
     }
 
+    // Calculate interest based on loan duration
+    function calculateInterest(address user) public view returns (uint256) {
+        uint256 debt = borrowedAmounts[user];
+        uint256 duration = block.timestamp - loanStartTimes[user];
+        uint256 interest = debt * annualInterestRate * duration / 365 days / 100;
+        return interest;
+    }
+
     // Repay borrowed funds partially or fully
     function repay() public payable {
-        uint amount = msg.value; // Repayment amount is the value sent with the transaction
-        uint amountOwed = borrowedAmounts[msg.sender];
+        uint256 amount = msg.value; // Repayment amount is the value sent with the transaction
+        uint256 interest = calculateInterest(msg.sender);
+        uint256 penalty = 0;
 
+        // Apply penalty if repayment is overdue
+        if (block.timestamp > loanDueDates[msg.sender]) {
+            penalty = borrowedAmounts[msg.sender] * latePenaltyRate / 100;
+        }
+
+        uint256 totalOwed = borrowedAmounts[msg.sender] + interest + penalty;
         require(amount > 0, "Repayment amount must be greater than 0");
-        require(amountOwed > 0, "No outstanding loan to repay");
-        require(amount <= amountOwed, "Cannot repay more than the owed amount");
+        require(totalOwed > 0, "No outstanding loan to repay");
+        require(amount <= totalOwed, "Cannot repay more than the owed amount");
 
-        borrowedAmounts[msg.sender] -= amount;
-        totalFundsAvailable += amount; // Add repayment to available funds
+        borrowedAmounts[msg.sender] = totalOwed - amount;
+        totalFundsAvailable = totalFundsAvailable + amount;
 
         emit Repay(msg.sender, amount);
     }
@@ -80,12 +122,20 @@ contract LendingPlatform {
 
     // View function to check the user's borrowing capacity
     function borrowingCapacity(address user) public view returns (uint256) {
-        uint maxBorrowable = (balances[user] * LTV) / 100;
-        uint debt = borrowedAmounts[user];
+        uint256 maxBorrowable = balances[user] * LTV / 100;
+        uint256 debt = borrowedAmounts[user];
         return maxBorrowable > debt ? maxBorrowable - debt : 0;
     }
+
     // Get user eligibility for withdrawal
     function canWithdraw(address user) public view returns (bool) {
         return borrowedAmounts[user] == 0 && balances[user] > 0;
+    }
+
+    // Admin function to update platform parameters
+    function updateParameters(uint256 _interestRate, uint256 _penaltyRate, uint256 _platformFee) public onlyOwner {
+        annualInterestRate = _interestRate;
+        latePenaltyRate = _penaltyRate;
+        platformFee = _platformFee;
     }
 }
