@@ -1,36 +1,40 @@
-import React from 'react'
+import React from "react";
 
 function TransactionContainer(props) {
+
+    const contractBalance = props.contractEthBalance
+    ? `${props.contractEthBalance.slice(0, 7)}...`
+    : "Connect";
+
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center p-4">
-      <div className="bg-white shadow-md rounded-lg p-6 w-full max-w-3xl">
-        <h1 className="text-2xl font-bold text-blue-700 text-center mb-4">
-          Lending & Borrowing Platform
-        </h1>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
+    <div
+      className="min-h-screen flex flex-col items-center py-8 px-4"
+      style={{
+        background: "linear-gradient(45deg, #192134, #1B2E59, #25689F, #070815)",
+      }}
+    >
+      <div
+        className="shadow-md rounded-lg p-8 w-full max-w-3xl relative"
+        style={{
+          background: "linear-gradient(45deg, rgba(0, 0,50, 0.4), rgba(9, 3, 7, 0.8))",
+        }}
+      >
+        <div className="grid grid-cols-2 gap-y-6 gap-x-6 mb-8">
           <div className="p-4 bg-blue-50 rounded-md shadow">
-            <h2 className="text-lg font-semibold">Wallet Balance</h2>
-            <p>{props.walletBalance} ETH</p>
-          </div>
-          <div className="p-4 bg-green-50 rounded-md shadow">
             <h2 className="text-lg font-semibold">Contract Balance</h2>
-            <p>{props.contractEthBalance} ETH</p>
+            <p>{contractBalance} ETH</p>
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="p-4 bg-yellow-50 rounded-md shadow">
             <h2 className="text-lg font-semibold">Collateral</h2>
             <p>{props.userCollateral} ETH</p>
           </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-y-6 gap-x-6 mb-8">
           <div className="p-4 bg-red-50 rounded-md shadow">
             <h2 className="text-lg font-semibold">Borrowed</h2>
             <p>{props.userBorrowed} ETH</p>
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="p-4 bg-purple-50 rounded-md shadow">
             <h2 className="text-lg font-semibold">Borrowing Capacity</h2>
             <p>{props.borrowCapacity} ETH</p>
@@ -42,19 +46,26 @@ function TransactionContainer(props) {
         </div>
 
         <div className="mb-6">
-          <h2 className="text-lg font-bold mb-2">Actions</h2>
-          <div className="grid grid-cols-4 gap-4">
+          <h2 className="text-lg font-bold mb-4" style={
+            {
+              color: "gray"
+            }
+          }>Actions</h2>
+          <div className="grid grid-cols-2 gap-y-8 gap-x-6">
             <div>
               <input
                 type="number"
                 placeholder="Deposit"
                 value={props.depositAmount}
                 onChange={(e) => props.setDepositAmount(e.target.value)}
-                className="border p-2 rounded w-full"
+                className="border p-2 rounded w-full mb-4"
               />
               <button
                 onClick={props.handleDeposit}
-                className="bg-blue-500 text-white p-2 rounded w-full mt-2"
+                className="p-2 rounded w-full text-white"
+                style={{
+                  background: "linear-gradient(45deg, #1E90FF, #00BFFF)",
+                }}
               >
                 Deposit
               </button>
@@ -65,16 +76,21 @@ function TransactionContainer(props) {
                 placeholder="Withdraw"
                 value={props.withdrawAmount}
                 onChange={(e) => props.setWithdrawAmount(e.target.value)}
-                className="border p-2 rounded w-full"
+                className="border p-2 rounded w-full mb-4"
               />
               <button
                 onClick={props.handleWithdraw}
                 disabled={!props.canWithdraw}
-                className={`${
-                    props.canWithdraw
-                    ? "bg-green-500"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                } text-white p-2 rounded w-full mt-2`}
+                className={`p-2 rounded w-full text-white ${
+                  props.canWithdraw
+                    ? "cursor-pointer"
+                    : "cursor-not-allowed bg-gray-300 text-gray-500"
+                }`}
+                style={{
+                  background: props.canWithdraw
+                    ? "linear-gradient(45deg, #32CD32, #228B22)"
+                    : "linear-gradient(45deg, #4C585B, #A5BFCC)",
+                }}
               >
                 Withdraw
               </button>
@@ -85,11 +101,14 @@ function TransactionContainer(props) {
                 placeholder="Borrow"
                 value={props.borrowAmount}
                 onChange={(e) => props.setBorrowAmount(e.target.value)}
-                className="border p-2 rounded w-full"
+                className="border p-2 rounded w-full mb-4"
               />
               <button
                 onClick={props.handleBorrow}
-                className="bg-yellow-500 text-white p-2 rounded w-full mt-2"
+                className="p-2 rounded w-full text-white"
+                style={{
+                  background: "linear-gradient(45deg, #FFD700, #FFA500)",
+                }}
               >
                 Borrow
               </button>
@@ -100,11 +119,14 @@ function TransactionContainer(props) {
                 placeholder="Repay"
                 value={props.repayAmount}
                 onChange={(e) => props.setRepayAmount(e.target.value)}
-                className="border p-2 rounded w-full"
+                className="border p-2 rounded w-full mb-4"
               />
               <button
                 onClick={props.handleRepay}
-                className="bg-red-500 text-white p-2 rounded w-full mt-2"
+                className="p-2 rounded w-full text-white"
+                style={{
+                  background: "linear-gradient(45deg, #FF4500, #DC143C)",
+                }}
               >
                 Repay
               </button>
@@ -113,7 +135,7 @@ function TransactionContainer(props) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default TransactionContainer
+export default TransactionContainer;
