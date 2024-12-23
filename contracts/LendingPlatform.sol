@@ -19,11 +19,23 @@ contract LendingPlatform {
     // Address of the contract owner (deployer)
     address public owner;
 
+    // Struct to store transaction details
+    struct Transaction {
+        address user;
+        string transactionType; // e.g., "deposit", "withdraw", "borrow", "repay"
+        uint256 amount;
+        uint256 timestamp;
+    }
+
+    // Array to store all transactions
+    Transaction[] public transactions;
+
     // Events for transparency
     event Deposit(address indexed user, uint256 amount);
     event Withdraw(address indexed user, uint256 amount);
     event Borrow(address indexed user, uint256 amount);
     event Repay(address indexed user, uint256 amount);
+    event TransactionRecorded(address indexed user, string transactionType, uint256 amount, uint256 timestamp);
 
     // Constructor to set the owner
     constructor() {
@@ -34,6 +46,18 @@ contract LendingPlatform {
     modifier onlyOwner() {
         require(msg.sender == owner, "Not the contract owner");
         _;
+    }
+
+    // Record a transaction
+    function recordTransaction(address user, string memory transactionType, uint256 amount) internal {
+        transactions.push(Transaction({
+            user: user,
+            transactionType: transactionType,
+            amount: amount,
+            timestamp: block.timestamp
+        }));
+
+        emit TransactionRecorded(user, transactionType, amount, block.timestamp);
     }
 
     // Deposit funds into the contract (collateral)
@@ -47,6 +71,7 @@ contract LendingPlatform {
         totalFundsAvailable = totalFundsAvailable + netAmount;
         insuranceFund = insuranceFund + (fee / 2); // 50% of fees go to the insurance fund
 
+        recordTransaction(msg.sender, "deposit", netAmount);
         emit Deposit(msg.sender, netAmount);
     }
 
@@ -61,6 +86,7 @@ contract LendingPlatform {
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Transfer failed");
 
+        recordTransaction(msg.sender, "withdraw", amount);
         emit Withdraw(msg.sender, amount);
     }
 
@@ -82,6 +108,7 @@ contract LendingPlatform {
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Transfer failed");
 
+        recordTransaction(msg.sender, "borrow", amount);
         emit Borrow(msg.sender, amount);
     }
 
@@ -112,6 +139,7 @@ contract LendingPlatform {
         borrowedAmounts[msg.sender] = totalOwed - amount;
         totalFundsAvailable = totalFundsAvailable + amount;
 
+        recordTransaction(msg.sender, "repay", amount);
         emit Repay(msg.sender, amount);
     }
 
@@ -138,4 +166,30 @@ contract LendingPlatform {
         latePenaltyRate = _penaltyRate;
         platformFee = _platformFee;
     }
+
+  function getTransactionsByUser(address user) public view returns (Transaction[] memory) {
+    uint256 count = 0;
+
+    // Count transactions for the user
+    for (uint256 i = 0; i < transactions.length; i++) {
+        if (transactions[i].user == user) {
+            count++;
+        }
+    }
+
+    // Create an array to hold user's transactions
+    Transaction[] memory userTransactions = new Transaction[](count);
+    uint256 index = 0;
+
+    // Populate the array
+    for (uint256 i = 0; i < transactions.length; i++) {
+        if (transactions[i].user == user) {
+            userTransactions[index] = transactions[i];
+            index++;
+        }
+    }
+
+    return userTransactions;
+}
+
 }

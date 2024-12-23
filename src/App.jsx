@@ -3,8 +3,8 @@ import Web3 from "web3";
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom"; // Import Navigate for redirection
 import LendingPlatform from "./LendingPlatform.json"; // ABI of your updated LendingPlatform contract
 import Header from "./components/Header";
-import LandingPage from "./components/LandingPage";
-import TransactionContainer from "./components/TransactionContainer";
+import LandingPage from "./pages/LandingPage";
+import TransactionContainer from "./pages/TransactionContainer";
 
 function App() {
   const [web3, setWeb3] = useState(null);
@@ -22,6 +22,10 @@ function App() {
   const [borrowAmount, setBorrowAmount] = useState("");
   const [repayAmount, setRepayAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
+
+  const [transactions, setTransactions] = useState([]);
+
+
 
   // Initialize Web3 and contract
   useEffect(() => {
@@ -77,8 +81,36 @@ function App() {
       setUserBorrowed(web3.utils.fromWei(borrowed, "ether"));
       setBorrowCapacity(web3.utils.fromWei(capacity, "ether"));
       setCanWithdraw(withdrawEligibility);
+
+      await fetchTransactionHistory();
     }
   };
+  
+  const fetchTransactionHistory = async () => {
+    if (contract && accounts.length > 0) {
+      try {
+        // Call the getTransactionsByUser function
+        const userTransactions = await contract.methods.getTransactionsByUser(accounts[0]).call();
+  
+        // Map the transactions into a readable format
+        const formattedTxs = userTransactions.map((tx) => ({
+          user: tx.user, // Address of the user
+          transactionType: tx.transactionType, // Deposit, Borrow, Repay, or Withdraw
+          // Handle BigInt conversion to string before using fromWei
+           amount: web3.utils.fromWei(tx.amount.toString(), "ether"), // Convert amount to Ether
+           timestamp: new Date(Number(tx.timestamp) * 1000).toLocaleString(), // Convert UNIX timestamp
+          }));
+  
+        setTransactions(formattedTxs); // Update the state with the formatted transactions
+        console.log("User Transactions:", formattedTxs);
+      } catch (error) {
+        console.error("Error fetching transactions:", error);
+      }
+    }
+  };
+  
+  
+    
 
   useEffect(() => {
     fetchData();
@@ -154,6 +186,7 @@ function App() {
           <Route
             path="/transactions"
             element={authUser ? <TransactionContainer
+              transactions={transactions}
               walletBalance={walletBalance}
               contractEthBalance={contractEthBalance}
               userCollateral={userCollateral}
@@ -176,7 +209,7 @@ function App() {
           />
           <Route
             path="/"
-            element={!authUser ? <LandingPage /> : <Navigate to="/transactions" />}
+            element={!authUser ? <LandingPage connect={connect} /> : <Navigate to="/transactions" />}
           />
         </Routes>
       </Router>

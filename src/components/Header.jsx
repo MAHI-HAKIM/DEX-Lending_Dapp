@@ -32,12 +32,15 @@ const Header = (props) => {
     <header>
       <div className="leftH">
         <img src={Logo} alt="logo" className="logo" />
+      
         <div to="/" className="link">
           <div className="headerItem">Transact</div>
         </div>
         <div to="/tokens" className="link">
           <div className="headerItem">History</div>
         </div>
+
+
       </div>
       <div className="rightH">
         <div className="headerItem">

@@ -25,7 +25,7 @@ const theme = createTheme({
   },
 });
 
-const LandingPage = () => {
+const LandingPage = (props) => {
   return (
     <ThemeProvider theme={theme}>
       <Box
@@ -73,6 +73,7 @@ const LandingPage = () => {
             future.
           </Typography>
           <Button
+            onClick={props.connect}
             variant="contained"
             size="large"
             sx={{
