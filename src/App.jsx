@@ -172,7 +172,7 @@ function App() {
 
     useEffect(() => {
     fetchData();
-  }, [contract, accounts]);
+  }, [contract, accounts, fetchData]);
 
   // Render UI
   return (
