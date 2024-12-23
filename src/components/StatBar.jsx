@@ -3,10 +3,9 @@ import Eth from "./Eth";
 
 function StatBar(props) {
   const [isFullValue, setIsFullValue] = useState(false); // Track if the full value should be shown
-
+ 
   // Function to handle toggling between full and truncated values
   const handleClick = () => {
-    console.log("StatBar.js - handleClick - isFullValue: ", isFullValue);
     setIsFullValue(!isFullValue); // Toggle the state
   };
 
@@ -33,7 +32,7 @@ function StatBar(props) {
         <div className="flex items-center justify-between">
           <div>
             <p className="text-md text-gray-500">{props.title}</p>
-            <p
+            <span
               className="text-2xl font-medium text-gray-900 cursor-pointer"
               onClick={handleClick} // Toggle value on click
               style={{
@@ -44,8 +43,8 @@ function StatBar(props) {
                 maxWidth: '100%' // Prevent the value from exceeding its container's width
               }}
             >
-              {displayValue} <Eth />
-            </p>
+              {displayValue} <span><Eth /></span>
+            </span>
           </div>
 
           <span className="rounded-full bg-blue-100 p-3 text-blue-600">
@@ -91,5 +90,6 @@ function StatBar(props) {
     </>
   );
 }
+
 
 export default StatBar;

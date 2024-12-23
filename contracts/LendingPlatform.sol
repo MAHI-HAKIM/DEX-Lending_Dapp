@@ -190,6 +190,5 @@ contract LendingPlatform {
     }
 
     return userTransactions;
-}
-
+    }
 }

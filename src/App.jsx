@@ -25,43 +25,6 @@ function App() {
 
   const [transactions, setTransactions] = useState([]);
 
-
-
-  // Initialize Web3 and contract
-  useEffect(() => {
-    const initWeb3 = async () => {
-      if (window.ethereum) {
-        const web3Instance = new Web3(window.ethereum);
-        setWeb3(web3Instance);
-
-        const networkId = await web3Instance.eth.net.getId();
-        const deployedNetwork = LendingPlatform.networks[networkId];
-        if (deployedNetwork) {
-          const contractInstance = new web3Instance.eth.Contract(
-            LendingPlatform.abi,
-            deployedNetwork.address
-          );
-          setContract(contractInstance);
-        } else {
-          alert("Smart contract not deployed on detected network.");
-        }
-      } else {
-        alert("Please install MetaMask to use this app.");
-      }
-    };
-
-    initWeb3();
-  }, []);
-
-  // Load saved account from localStorage on page refresh
-  useEffect(() => {
-    const savedAccount = localStorage.getItem("accountAddress");
-    if (savedAccount) {
-      setAccounts([savedAccount]);
-      setAuthUser(true);
-    }
-  }, []);
-
   // Fetch user and contract data
   const fetchData = async () => {
     if (contract && accounts.length > 0) {
@@ -86,6 +49,7 @@ function App() {
     }
   };
   
+  //Fetch transaction history
   const fetchTransactionHistory = async () => {
     if (contract && accounts.length > 0) {
       try {
@@ -102,19 +66,11 @@ function App() {
           }));
   
         setTransactions(formattedTxs); // Update the state with the formatted transactions
-        console.log("User Transactions:", formattedTxs);
       } catch (error) {
         console.error("Error fetching transactions:", error);
       }
     }
   };
-  
-  
-    
-
-  useEffect(() => {
-    fetchData();
-  }, [contract, accounts]);
 
   // Connect function to request user account
   const connect = async () => {
@@ -137,7 +93,7 @@ function App() {
     localStorage.removeItem("accountAddress"); // Remove saved account from localStorage
   };
 
-  // Action handlers
+  // Deposit handlers
   const handleDeposit = async () => {
     if (depositAmount > 0) {
       await contract.methods.deposit().send({
@@ -148,6 +104,7 @@ function App() {
     }
   };
 
+  // Withdraw handlers
   const handleWithdraw = async () => {
     if (withdrawAmount > 0 && canWithdraw) {
       await contract.methods
@@ -156,7 +113,8 @@ function App() {
       fetchData();
     }
   };
-
+  
+  // Borrow handlers
   const handleBorrow = async () => {
     if (borrowAmount > 0) {
       await contract.methods
@@ -166,6 +124,7 @@ function App() {
     }
   };
 
+  // Repay handlers
   const handleRepay = async () => {
     if (repayAmount > 0) {
       await contract.methods.repay().send({
@@ -175,6 +134,45 @@ function App() {
       fetchData();
     }
   };
+
+  // Initialize Web3 and contract
+    useEffect(() => {
+    const initWeb3 = async () => {
+      if (window.ethereum) {
+        const web3Instance = new Web3(window.ethereum);
+        setWeb3(web3Instance);
+
+        const networkId = await web3Instance.eth.net.getId();
+        const deployedNetwork = LendingPlatform.networks[networkId];
+        if (deployedNetwork) {
+          const contractInstance = new web3Instance.eth.Contract(
+            LendingPlatform.abi,
+            deployedNetwork.address
+          );
+          setContract(contractInstance);
+        } else {
+          alert("Smart contract not deployed on detected network.");
+        }
+      } else {
+        alert("Please install MetaMask to use this app.");
+      }
+    };
+
+    initWeb3();
+  }, []);
+
+    // Load saved account from localStorage on page refresh
+    useEffect(() => {
+      const savedAccount = localStorage.getItem("accountAddress");
+      if (savedAccount) {
+        setAccounts([savedAccount]);
+        setAuthUser(true);
+      }
+  }, []);
+
+    useEffect(() => {
+    fetchData();
+  }, [contract, accounts]);
 
   // Render UI
   return (

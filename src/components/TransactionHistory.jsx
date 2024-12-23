@@ -2,11 +2,11 @@ import React , {useState} from "react";
 import { format } from "date-fns"; // For formatting the date
 
 const TransactionHistory = (props) => {
+
  const [isFullValue, setIsFullValue] = useState(false); // Track if the full value should be shown
 
   // Function to handle toggling between full and truncated values
   const handleClick = () => {
-    console.log("StatBar.js - handleClick - isFullValue: ", isFullValue);
     setIsFullValue(!isFullValue); // Toggle the state
   };
 
@@ -25,7 +25,6 @@ const TransactionHistory = (props) => {
   };
 
   // Get the display value, either full or truncated
-
   function displayAddress(adress) {
     return `${adress.slice(0, 8)}...${adress.slice(-4)}`;
   };
@@ -36,7 +35,7 @@ const TransactionHistory = (props) => {
       case 'deposit':
         return 'bg-blue-50'; // Dimmed blue
       case 'withdraw':
-        return 'bg-green-100'; // Dimmed green
+        return 'bg-green-200'; // Dimmed green
       case 'borrow':
         return 'bg-yellow-50'; // Dimmed orange
       case 'repay':
@@ -48,9 +47,9 @@ const TransactionHistory = (props) => {
 
   return (
     <>
-    <div className="rounded-bg-blue-950">
-      <table className="">
-        <thead className="ltr:text-left rtl:text-right bg-gradient-to-r from-blue-950 via-indigo-700 to-blue-950 rounded-xl">
+    <div className=" rounded-bg-blue-950 h-[610px] overflow-y-auto">
+    <table className="w-[750px]table-auto">
+    <thead className="ltr:text-left rtl:text-right bg-gradient-to-r from-blue-950 via-indigo-700 to-blue-950 rounded-xl">
           <tr className="rounded-bg">
             <th className="whitespace-nowrap px-10 py-3 font-medium text-lg text-white">User Account</th>
             <th className="whitespace-nowrap px-10 py-3 font-medium text-lg text-white">Transaction Type</th>
@@ -59,10 +58,9 @@ const TransactionHistory = (props) => {
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-gray-200 bg-white ">
+        <tbody className=" divide-y divide-gray-200 bg-white ">
           {props.transactions && props.transactions.length > 0 ? (
-            props.transactions.map((tx, index) => (
-                
+            props.transactions.map((tx, index) => (  
               <tr key={index} className={`${getTransactionClass(tx.transactionType)}`}>
                 <td className="whitespace-nowrap px-6 py-4 font-medium text-gray-900">
                   {displayAddress(tx.user)}
@@ -85,7 +83,6 @@ const TransactionHistory = (props) => {
       </table>
     </div>
     </>
-
   );
 };
 

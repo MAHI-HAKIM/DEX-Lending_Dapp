@@ -6,7 +6,6 @@ function Eth() {
     <span
       className="inline-flex items-center justify-center rounded-full bg-purple-100 px-3 py-1.5 text-blue-700 mx-1"
     >
-     
      <svg xmlns="http://www.w3.org/2000/svg" 
         width="20" height="20" viewBox="0 0 32 32">
         <g fill="none" fillRule="evenodd">
@@ -24,10 +23,7 @@ function Eth() {
     
       <p className="whitespace-nowrap text-sm mx-1">ETH</p>
     </span>
- 
 </>
-
-  )
-}
+  )};
 
 export default Eth

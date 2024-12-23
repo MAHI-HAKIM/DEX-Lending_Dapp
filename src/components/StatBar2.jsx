@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Eth from './Eth';
 
 function StatBar2(props) {
+
   const [isFullValue, setIsFullValue] = useState(false); // Track if the full value should be shown
 
   // Function to handle toggling between full and truncated values
@@ -27,11 +28,12 @@ function StatBar2(props) {
   const displayValue = isFullValue ? props.value : formatNumber(props.value);
 
   return (
+    <>
     <div>
       <article className="flex flex-col gap-4 rounded-lg border border-gray-100 bg-white p-6">
         <div>
           <strong className="block text-sm font-medium text-gray-500">{props.title}</strong>
-          <p>
+          <span>
             <span
               className="text-2xl font-medium text-gray-900 cursor-pointer"
               onClick={handleClick} // Toggle value on click
@@ -43,12 +45,13 @@ function StatBar2(props) {
                 maxWidth: '100%' // Prevent the value from exceeding its container's width
               }}
             >
-              {displayValue} <Eth />
+              {displayValue} <span><Eth /></span>
             </span>
-          </p>
+          </span>
         </div>
       </article>
     </div>
+    </>
   );
 }
 

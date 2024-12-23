@@ -5,6 +5,7 @@ import Modal from "react-modal";
 import { FaSignOutAlt } from "react-icons/fa"; // Import logout icon
 
 const Header = (props) => {
+
   const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
   const { address, authUser, connect, walletBalance, logout } = props;
 
@@ -25,22 +26,16 @@ const Header = (props) => {
     ? `${walletBalance.slice(0, 6)}...ETH`
     : "Connect";
 
-  // console.log("Header.js - address: ", displayAddress);
-  console.log("Header.js - isConnected: ", authUser);
-
   return (
+    <>
     <header>
       <div className="leftH">
         <img src={Logo} alt="logo" className="logo" />
-      
-        <div to="/" className="link">
-          <div className="headerItem">Transact</div>
-        </div>
-        <div to="/tokens" className="link">
-          <div className="headerItem">History</div>
-        </div>
-
-
+        
+        {authUser ? (<div to="/" className="link">
+          <div className="headerItem">Transactions</div>
+        </div>) : ""}
+        
       </div>
       <div className="rightH">
         <div className="headerItem">
@@ -90,6 +85,7 @@ const Header = (props) => {
         </div>
       </div>
     </header>
+    </>
   );
 };
 
