@@ -38,7 +38,12 @@ function TransactionBody(props) {
       setBorrowError("Amount exceeds borrowing capacity.");
     } else if (borrowAmount > props.walletBalance) {
       setBorrowError("Amount exceeds wallet balance.");
-    } else {
+    } else if (borrowAmount > 0 && props.userCollateral === 0) {
+      setBorrowError("You have no collateral.");
+    }else if(borrowAmount > 0 && props.userBorrowed > 0){
+        setBorrowError("You have borrowed amount. Repay it first.");
+    }
+    else {
       setBorrowError("");
     }
   
