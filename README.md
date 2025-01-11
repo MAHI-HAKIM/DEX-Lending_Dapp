@@ -138,7 +138,16 @@ truffle test
 
 ---
 
+## Application Insights
 
+### Landing Page
+![Application Screenshots](https://github.com/MAHI-HAKIM/DEX-Lending_DAPP/blob/master/pic/landingPage.png)
+### Transaction Page
+![Application Screenshots](https://github.com/MAHI-HAKIM/DEX-Lending_DAPP/blob/master/pic/metamaskRequest.png)
+### Transaction History 
+![Application Screenshots](https://github.com/MAHI-HAKIM/DEX-Lending_DAPP/blob/master/pic/transactionHistory.png)
+
+---
 
 ## Troubleshooting
 
