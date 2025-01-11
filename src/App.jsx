@@ -26,6 +26,7 @@ function App() {
   const [transactions, setTransactions] = useState([]);
 
   // Fetch user and contract data
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const fetchData = async () => {
     if (contract && accounts.length > 0) {
       const [wallet, contractBalance, collateral, borrowed, capacity, withdrawEligibility] =
